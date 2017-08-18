@@ -244,7 +244,7 @@ func (this *ZMachine) executeCycle() {
 	} else {
 		switch operandCount {
 		case 0:
-			imp0op[opcode](this)
+			this.imp0op(opcode)
 		case 1:
 			imp1op[opcode](this, operands[0])
 		case 2:

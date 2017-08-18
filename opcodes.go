@@ -7,27 +7,22 @@ import (
 	"time"
 )
 
-var imp0op = []func(*ZMachine){
-	// rtrue
-	func(this *ZMachine) {
+func (this *ZMachine) imp0op(code byte) {
+	switch code {
+	case 0:
+		// rtrue
 		this.returnFromRoutine(1)
-	},
-
-	// rfalse
-	func(this *ZMachine) {
+	case 1:
+		// rfalse
 		this.returnFromRoutine(0)
-	},
-
-	// print
-	func(this *ZMachine) {
+	case 2:
+		// print
 		zchars := this.zString(this.pc+1, false)
 		this.pc += (zchars.Size() / 3) * 2
 		zscii := zchars.ZSCIIString()
 		this.output <- zscii.String()
-	},
-
-	// print_ret
-	func(this *ZMachine) {
+	case 3:
+		// print_ret
 		// Copied from print above because it can't call it ("initialization loop")
 		zchars := this.zString(this.pc+1, false)
 		this.pc += (zchars.Size() / 3) * 2
@@ -35,15 +30,11 @@ var imp0op = []func(*ZMachine){
 		this.output <- zscii.String()
 		this.output <- "\n"
 		this.returnFromRoutine(1)
-	},
-
+	case 4:
 	// xyzzy
-	func(this *ZMachine) {
-		// Nothing happens.
-	},
-
-	// save
-	func(this *ZMachine) {
+	// Nothing happens.
+	case 5:
+		// save
 		this.output <- "Please enter a filename to save: "
 		filename := <-this.input
 		if err := SaveQuetzalFile(filename, this, true); err != nil {
@@ -53,10 +44,8 @@ var imp0op = []func(*ZMachine){
 		} else {
 			this.branch(true)
 		}
-	},
-
-	// restore
-	func(this *ZMachine) {
+	case 6:
+		// restore
 		this.output <- "Please enter a filename to load: "
 		filename := <-this.input
 		if err := LoadQuetzalFile(filename, this); err != nil {
@@ -66,47 +55,33 @@ var imp0op = []func(*ZMachine){
 		} else {
 			this.branch(true)
 		}
-	},
-
-	// restart
-	func(this *ZMachine) {
+	case 7:
+		// restart
 		this.Run()
 		this.pc--
-	},
-
-	// ret_popped
-	func(this *ZMachine) {
+	case 8:
+		// ret_popped
 		this.returnFromRoutine(this.stack.Pop())
-	},
-
-	// pop
-	func(this *ZMachine) {
+	case 9:
+		// pop
 		this.stack.Pop()
-	},
-
-	// quit
-	func(this *ZMachine) {
+	case 10:
+		// quit
 		this.running = false
 		close(this.output)
 		close(this.errors)
-	},
-
-	// new_line
-	func(this *ZMachine) {
+	case 11:
+		// new_line
 		this.output <- "\n"
-	},
-
+	case 12:
 	// set_status
-	func(this *ZMachine) {
-		// Unimplemented.
-	},
-
-	// verify
-	func(this *ZMachine) {
+	// Unimplemented.
+	case 13:
+		// verify
 		// This is supposed to check for corruption.
 		// Unimplemented.
 		this.branch(true)
-	},
+	}
 }
 
 var imp1op = []func(*ZMachine, uint16){
