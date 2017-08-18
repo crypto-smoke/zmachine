@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 
@@ -13,26 +12,13 @@ func main() {
 		panic("please specify a file to load")
 	}
 
-	in := make(chan string, 1)
-	out := make(chan string, 1)
 	err := make(chan error, 1)
-	zm := zmachine.New(os.Args[1], in, out, err)
-	go func() {
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			in <- scanner.Text()
-		}
-	}()
+	zm := zmachine.New(os.Args[1], os.Stdin, os.Stdout, err)
 
 	go func() {
 		for {
-			select {
-			case e := <-err:
-				fmt.Println("ERROR:", e)
-			case txt := <-out:
-				//fmt.Println(len(txt))
-				fmt.Print(txt)
-			}
+			e := <-err
+			fmt.Println("ERROR:", e)
 		}
 	}()
 

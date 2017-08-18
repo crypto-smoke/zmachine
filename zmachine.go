@@ -1,6 +1,10 @@
 package zmachine
 
-import "os"
+import (
+	"bufio"
+	"io"
+	"os"
+)
 
 type OperandType byte
 type OpcodeFormat byte
@@ -15,8 +19,8 @@ const OPERAND_TYPE_VAR OperandType = 2
 const OPERAND_TYPE_OMITTED OperandType = 3
 
 type ZMachine struct {
-	input  chan string
-	output chan string
+	input  *bufio.Reader
+	output io.Writer
 	errors chan error
 
 	story_file string
@@ -46,10 +50,10 @@ type ZMachine struct {
 	opcodesExecuted int
 }
 
-func New(file string, in chan string, out chan string, err chan error) ZMachine {
+func New(file string, in io.Reader, out io.Writer, err chan error) ZMachine {
 	machine := ZMachine{
 		story_file: file,
-		input:      in,
+		input:      bufio.NewReader(in),
 		output:     out,
 		errors:     err,
 	}
@@ -125,7 +129,6 @@ func (this *ZMachine) mainLoop() {
 func (this *ZMachine) Run() {
 	if err := this.LoadStory(); err != nil {
 		this.errors <- err
-		close(this.output)
 		return
 	}
 	this.CompleteSetup()

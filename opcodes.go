@@ -20,37 +20,37 @@ func (this *ZMachine) imp0op(code byte) {
 		zchars := this.zString(this.pc+1, false)
 		this.pc += (zchars.Size() / 3) * 2
 		zscii := zchars.ZSCIIString()
-		this.output <- zscii.String()
+		fmt.Fprint(this.output, zscii.String())
 	case 3:
 		// print_ret
 		// Copied from print above because it can't call it ("initialization loop")
 		zchars := this.zString(this.pc+1, false)
 		this.pc += (zchars.Size() / 3) * 2
 		zscii := zchars.ZSCIIString()
-		this.output <- zscii.String()
-		this.output <- "\n"
+		fmt.Fprint(this.output, zscii.String()+"\n")
 		this.returnFromRoutine(1)
 	case 4:
 	// xyzzy
 	// Nothing happens.
 	case 5:
 		// save
-		this.output <- "Please enter a filename to save: "
-		filename := <-this.input
+		fmt.Fprint(this.output, "Please enter a filename to save: ")
+		filename, _ := this.input.ReadString('\n')
+		filename = filename[:len(filename)-1]
 		if err := SaveQuetzalFile(filename, this, true); err != nil {
-			this.output <- err.Error()
-			this.output <- "\n"
+			fmt.Fprint(this.output, err.Error()+"\n")
 			this.branch(false)
 		} else {
 			this.branch(true)
 		}
+
 	case 6:
 		// restore
-		this.output <- "Please enter a filename to load: "
-		filename := <-this.input
+		fmt.Fprint(this.output, "Please enter a filename to load: ")
+		filename, _ := this.input.ReadString('\n')
+		filename = filename[:len(filename)-1]
 		if err := LoadQuetzalFile(filename, this); err != nil {
-			this.output <- err.Error()
-			this.output <- "\n"
+			fmt.Fprint(this.output, err.Error()+"\n")
 			this.branch(false)
 		} else {
 			this.branch(true)
@@ -68,11 +68,10 @@ func (this *ZMachine) imp0op(code byte) {
 	case 10:
 		// quit
 		this.running = false
-		close(this.output)
 		close(this.errors)
 	case 11:
 		// new_line
-		this.output <- "\n"
+		fmt.Fprint(this.output, "\n")
 	case 12:
 	// set_status
 	// Unimplemented.
@@ -139,7 +138,7 @@ var imp1op = []func(*ZMachine, uint16){
 	func(this *ZMachine, address uint16) {
 		zchars := this.zString(int(address), false)
 		zscii := zchars.ZSCIIString()
-		this.output <- zscii.String()
+		fmt.Fprint(this.output, zscii.String())
 	},
 
 	// Nothing
@@ -155,7 +154,7 @@ var imp1op = []func(*ZMachine, uint16){
 		obj := byte(objw)
 		zstring := this.getObjectName(obj)
 		zscii := zstring.ZSCIIString()
-		this.output <- zscii.String()
+		fmt.Fprint(this.output, zscii.String())
 	},
 
 	// ret
@@ -174,7 +173,7 @@ var imp1op = []func(*ZMachine, uint16){
 		address := this.unpackAddress(paddr)
 		zchars := this.zString(address, false)
 		zscii := zchars.ZSCIIString()
-		this.output <- zscii.String()
+		fmt.Fprint(this.output, zscii.String())
 	},
 
 	// load
@@ -440,11 +439,8 @@ var impvop = []func(*ZMachine, ...uint16){
 	// read
 	func(this *ZMachine, args ...uint16) {
 		text, parse := int(args[0]), int(args[1])
-		input, ok := <-this.input
-		if !ok {
-			panic("Input channel not okay!")
-		}
-
+		input, _ := this.input.ReadString('\n')
+		input = input[:len(input)-1]
 		maxlength := int(this.memory[text]) + 1
 		var read string
 		if len(input) > maxlength {
@@ -462,12 +458,12 @@ var impvop = []func(*ZMachine, ...uint16){
 	// print_char
 	func(this *ZMachine, args ...uint16) {
 		zscii := ZSCIIString{[]byte{byte(args[0])}, this}
-		this.output <- zscii.String()
+		fmt.Fprint(this.output, zscii.String())
 	},
 
 	// print_num
 	func(this *ZMachine, args ...uint16) {
-		this.output <- fmt.Sprintf("%d", args[0])
+		fmt.Fprintf(this.output, "%d", args[0])
 	},
 
 	// random

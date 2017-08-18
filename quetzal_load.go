@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-)
 
-import "github.com/Katharine/chunk.go"
+	"github.com/Katharine/chunk.go"
+)
 
 func LoadQuetzalFile(filename string, machine *ZMachine) (err error) {
 	f, err := os.Open(filename)

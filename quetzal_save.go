@@ -3,7 +3,6 @@ package zmachine
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"os"
 )
@@ -194,7 +193,9 @@ func quetzalWriteStks(stream io.Writer, machine *ZMachine) {
 }
 
 func quetzalWriteANNO(stream io.Writer, machine *ZMachine) {
-	message := fmt.Sprintf("Version %d game, saved by zmachine.go", machine.version)
+	//message := fmt.Sprintf("Version %d game, saved by zmachine written in golang", machine.version)
+	// save space
+	var message string
 	data := []interface{}{
 		[]byte("ANNO"),
 		uint32(len(message)),
