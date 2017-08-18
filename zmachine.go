@@ -19,9 +19,10 @@ const OPERAND_TYPE_VAR OperandType = 2
 const OPERAND_TYPE_OMITTED OperandType = 3
 
 type ZMachine struct {
-	input  *bufio.Reader
-	output io.Writer
-	errors chan error
+	input       *bufio.Reader
+	output      io.Writer
+	errors      chan error
+	saveToFiles bool
 
 	story_file string
 	memory     []byte
@@ -50,12 +51,13 @@ type ZMachine struct {
 	opcodesExecuted int
 }
 
-func New(file string, in io.Reader, out io.Writer, err chan error) ZMachine {
+func New(file string, in io.Reader, out io.Writer, err chan error, saveToFiles bool) ZMachine {
 	machine := ZMachine{
-		story_file: file,
-		input:      bufio.NewReader(in),
-		output:     out,
-		errors:     err,
+		story_file:  file,
+		input:       bufio.NewReader(in),
+		output:      out,
+		errors:      err,
+		saveToFiles: saveToFiles,
 	}
 
 	return machine

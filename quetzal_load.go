@@ -2,14 +2,68 @@ package zmachine
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/Katharine/chunk.go"
 )
+
+func LoadQuetzalHex(hex string, machine *ZMachine) (err error) {
+	data, err := base64.StdEncoding.DecodeString(hex)
+	if err != nil {
+		return err
+	}
+
+	rdata := bytes.NewReader(data)
+	r, err := gzip.NewReader(rdata)
+	if err != nil {
+		return err
+
+	}
+
+	s, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+
+	}
+
+	f := bytes.NewReader(s)
+
+	form, err := chunk.New(f)
+	if err != nil {
+		return err
+	}
+	ifzs := make([]byte, 4)
+	if n, err := form.Read(ifzs); err != nil || n != 4 {
+		return err
+	}
+	if string(ifzs) != "IFZS" {
+		return errors.New("File is not a quetzal save file")
+	}
+
+	for {
+		if chunk, err := chunk.New(f); err == nil {
+			if f, ok := quetzalChunkHandlers[chunk.Name()]; ok {
+				if err := f(machine, chunk); err != nil {
+					return err
+				}
+			} else {
+				chunk.Skip()
+			}
+		} else if err == io.EOF {
+			break
+		} else {
+			return err
+		}
+	}
+	return nil
+}
 
 func LoadQuetzalFile(filename string, machine *ZMachine) (err error) {
 	f, err := os.Open(filename)

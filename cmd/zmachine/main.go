@@ -13,7 +13,7 @@ func main() {
 	}
 
 	err := make(chan error, 1)
-	zm := zmachine.New(os.Args[1], os.Stdin, os.Stdout, err)
+	zm := zmachine.New(os.Args[1], os.Stdin, os.Stdout, err, true)
 
 	go func() {
 		for {

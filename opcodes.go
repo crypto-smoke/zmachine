@@ -34,26 +34,53 @@ func (this *ZMachine) imp0op(code byte) {
 	// Nothing happens.
 	case 5:
 		// save
-		fmt.Fprint(this.output, "Please enter a filename to save: ")
-		filename, _ := this.input.ReadString('\n')
-		filename = filename[:len(filename)-1]
-		if err := SaveQuetzalFile(filename, this, true); err != nil {
-			fmt.Fprint(this.output, err.Error()+"\n")
-			this.branch(false)
-		} else {
-			this.branch(true)
-		}
+		if this.saveToFiles {
+			fmt.Fprint(this.output, "Please enter a filename to save: ")
+			filename, _ := this.input.ReadString('\n')
+			filename = filename[:len(filename)-1]
+			if err := SaveQuetzalFile(filename, this, true); err != nil {
+				fmt.Fprint(this.output, err.Error()+"\n")
+				this.branch(false)
+			} else {
+				this.branch(true)
+			}
 
+		} else {
+			out, err := SaveQuetzalHex(this, true)
+			if err != nil {
+				fmt.Fprint(this.output, err.Error()+"\n")
+				this.branch(false)
+			} else {
+
+				fmt.Fprint(this.output, "Please save the following to restore your game: "+out+"\n")
+				this.branch(true)
+			}
+
+		}
 	case 6:
 		// restore
-		fmt.Fprint(this.output, "Please enter a filename to load: ")
-		filename, _ := this.input.ReadString('\n')
-		filename = filename[:len(filename)-1]
-		if err := LoadQuetzalFile(filename, this); err != nil {
-			fmt.Fprint(this.output, err.Error()+"\n")
-			this.branch(false)
+		if this.saveToFiles {
+			fmt.Fprint(this.output, "Please enter a filename to load: ")
+			filename, _ := this.input.ReadString('\n')
+			filename = filename[:len(filename)-1]
+			if err := LoadQuetzalFile(filename, this); err != nil {
+				fmt.Fprint(this.output, err.Error()+"\n")
+				this.branch(false)
+			} else {
+				this.branch(true)
+			}
+
 		} else {
-			this.branch(true)
+			fmt.Fprint(this.output, "Please paste encoded save data: ")
+			input, _ := this.input.ReadString('\n')
+			hex := input[:len(input)-1]
+			if err := LoadQuetzalHex(hex, this); err != nil {
+				fmt.Fprint(this.output, err.Error()+"\n")
+				this.branch(false)
+			} else {
+				this.branch(true)
+			}
+
 		}
 	case 7:
 		// restart

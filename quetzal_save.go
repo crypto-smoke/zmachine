@@ -2,11 +2,64 @@ package zmachine
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"encoding/binary"
 	"io"
 	"os"
 )
 
+func SaveQuetzalHex(machine *ZMachine, compressed bool) (output string, err error) {
+	s := new(bytes.Buffer)
+	// Header.
+	quetzalWriteIFhd(s, machine)
+
+	// If requested, try to write a compressed file. If we can't do that (because we
+	// can't load the original story file), write an uncompressed file instead.
+	if compressed {
+		if err := quetzalWriteCMem(s, machine); err != nil {
+			compressed = false
+		}
+	}
+	if !compressed {
+		quetzalWriteUMem(s, machine)
+	}
+	quetzalWriteStks(s, machine)
+	quetzalWriteANNO(s, machine)
+
+	// Write it to our file.
+	length := uint32(s.Len() + 4)
+	data := []interface{}{
+		[]byte("FORM"),
+		length,
+		[]byte("IFZS"),
+	}
+
+	f := bytes.NewBuffer([]byte{})
+	err = multiWrite(f, data)
+	if err == nil {
+		_, err = s.WriteTo(f)
+	}
+	if length&1 == 1 {
+		f.Write([]byte{0})
+	}
+
+	// compress and base64 encode for terminal output
+	var b bytes.Buffer
+	gz := gzip.NewWriter(&b)
+	if _, err = gz.Write(f.Bytes()); err != nil {
+		return
+	}
+	if err = gz.Flush(); err != nil {
+		return
+	}
+	if err = gz.Close(); err != nil {
+		return
+
+	}
+	output = base64.StdEncoding.EncodeToString(b.Bytes())
+	return
+}
 func SaveQuetzalFile(filename string, machine *ZMachine, compressed bool) (err error) {
 	f, err := os.Create(filename)
 	if err != nil {
