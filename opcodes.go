@@ -52,7 +52,8 @@ func (this *ZMachine) imp0op(code byte) {
 				this.branch(false)
 			} else {
 
-				fmt.Fprint(this.output, "Please save the following to restore your game: "+out+"\n")
+				fmt.Fprint(this.output, "Please save the following to restore your game:\n")
+				fmt.Fprint(this.output, out+"\n")
 				this.branch(true)
 			}
 
