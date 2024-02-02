@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	zmachine "github.com/inhies/zmachine"
+	"github.com/crypto-smoke/zmachine"
 )
 
 func main() {
